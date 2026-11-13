@@ -167,6 +167,10 @@ bun run test:integration
 
 Unit tests cover pagination, cursors, truncation handling, file line counts, and structured callable metadata. The integration test uses the real native backend to index a temporary TypeScript project, checks cross-file calls, isolated functions, parameter and return annotations, methods, and export counts, and cleans up its temporary index.
 
+## Publishing
+
+Releases are published from GitHub Actions when a version tag is pushed. Before the first release, configure npm Trusted Publishing for package `@youichi/repograph` with GitHub user `hi-youichi`, repository `repograph`, and workflow file `publish-npm.yml`; allow direct `npm publish` for that publisher. Then update `package.json` to the new version and push the matching tag, for example `v0.1.1`. The workflow checks that the tag matches the package version, installs dependencies, runs typecheck and unit tests, then builds and publishes with npm provenance. No npm token is stored in GitHub Secrets.
+
 ## Limitations
 
 - Exports contain the static relationships actually indexed upstream and do not guarantee coverage of all runtime calls. Support for reflection, dynamic dispatch, and framework conventions varies by language.
