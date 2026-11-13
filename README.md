@@ -17,13 +17,13 @@ The project pins `codebase-memory-mcp@0.12.1`. The initial installation download
 Run these commands from any directory:
 
 ```bash
-# Export all nodes and relationships: functions, files, modules, calls, imports, inheritance, etc.
+# Export all indexed nodes and relationships, plus source-derived class members and dependencies
 npx @youichi/repograph export ../anureo-sdk
 
 # Specify an output file
 npx @youichi/repograph export /path/to/repository --out .repograph/repository.json
 
-# Keep only CALLS edges, functions, methods, and the endpoints of those edges
+# Export only CALLS edges, functions/methods, and their endpoints
 npx @youichi/repograph export ../anureo-sdk --kind calls --out .repograph/calls.json
 
 # Show available options
@@ -35,7 +35,7 @@ The default output is `.repograph/graph.json` under the current working director
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `--out`, `-o` | `.repograph/graph.json` | JSON output path |
-| `--kind` | `all` | `all` exports all relationships; `calls` exports the call graph |
+| `--kind` | `all` | `all` includes class structure and dependencies; `calls` keeps only direct call relationships |
 | `--project` | Directory name + hash of the absolute path | Override the upstream index name |
 | `--page-size` | `500` | Rows per query batch, from 1 to 10000 |
 
@@ -86,11 +86,36 @@ The following is a simplified example. Actual properties depend on the language 
 }
 ```
 
-Node IDs and edge IDs are strings in separate namespaces. An edge's `source` and `target` refer to node IDs. IDs link records within the current export and are not guaranteed to remain stable across indexing runs. `indexReport` preserves the upstream indexing report; its counts still describe the original complete index in `calls` mode.
+Node IDs and edge IDs are strings in separate namespaces. An edge's `source` and `target` refer to node IDs. IDs link records within the current export and are not guaranteed to remain stable across indexing runs. `indexReport` preserves the upstream indexing report; its counts describe the upstream index and can differ from the exported graph after filtering or adding source-derived class data.
 
 TypeScript and JavaScript `Function` and `Method` nodes include `callable` metadata in both `all` and `calls` exports. The exporter parses upstream `properties.signature` and `properties.return_type` with the TypeScript parser, without loading the target project's dependencies or inferring types. Supported file extensions are `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, and `.cjs`. Other languages and node labels omit `callable`. The original `properties` remain intact, and this additive field retains `schemaVersion: 1`.
 
-In `all` exports, TypeScript and JavaScript `Class` and `Interface` nodes include a `members` array for declared fields and accessors. Entries retain declared type text (or `null` when absent), source lines, visibility, static, optional, and readonly flags. The exporter also adds `DEPENDS_ON` edges for resolvable field, method-parameter, and method-return type references, plus method calls between classes. These source-derived edges have `properties.derivedFrom: "typescript-ast"` and a `reason`; they are omitted when a referenced class cannot be resolved without ambiguity. Other languages retain the class, field, inheritance, implementation, and dependency nodes and edges supplied by the upstream indexer.
+In `all` exports, TypeScript and JavaScript `Class` and `Interface` nodes include a `members` array for declared fields and accessors. Entries retain declared type text (or `null` when absent), source lines, visibility, static, optional, and readonly flags. The exporter also adds `DEPENDS_ON` edges for resolvable field, method-parameter, and method-return type references, plus method calls between classes. These source-derived edges have `properties.derivedFrom: "typescript-ast"` and a `reason`; they are omitted when a referenced class cannot be resolved without ambiguity. `calls` exports intentionally omit these class members and dependencies. Other languages retain whatever class, field, inheritance, implementation, and dependency nodes and edges the upstream indexer supplies.
+
+For example, `Customer` with an `address?: Address` field and a `save(input: Address): Result` method includes:
+
+```json
+{
+  "labels": ["Class"],
+  "name": "Customer",
+  "members": [
+    {
+      "name": "address",
+      "kind": "field",
+      "type": "Address",
+      "filePath": "model.ts",
+      "startLine": 6,
+      "endLine": 6,
+      "visibility": "public",
+      "static": false,
+      "optional": true,
+      "readonly": false
+    }
+  ]
+}
+```
+
+The graph also contains edges such as `{ "source": "<Customer id>", "target": "<Address id>", "type": "DEPENDS_ON", "properties": { "derivedFrom": "typescript-ast", "reason": "field-type", "member": "address" } }`. Existing upstream `INHERITS` and `IMPLEMENTS` edges are retained as-is.
 
 For example, `function load(id: string, count = 1, ...tags: string[]): Promise<string[]>` produces:
 
@@ -147,6 +172,7 @@ Unit tests cover pagination, cursors, truncation handling, file line counts, and
 - Exports contain the static relationships actually indexed upstream and do not guarantee coverage of all runtime calls. Support for reflection, dynamic dispatch, and framework conventions varies by language.
 - The upstream indexer skips `node_modules`, files matching ignore rules, and other excluded inputs. Use the skip and parse counts in `indexReport` to assess coverage.
 - `calls` mode retains only `CALLS` edges. It does not treat `CALL_REFERENCE` or `USAGE` as direct calls. The upstream analyzer may also record recursion in properties while omitting self-call edges.
+- Source-derived class members and type dependencies currently cover TypeScript and JavaScript files. Other languages depend on the class, field, and relationship data available from the pinned upstream indexer; type references are not inferred from unannotated initializers.
 - Keep source files and the project's index unchanged during export, and prevent other processes from rebuilding the index concurrently. Exports are not transactional snapshots across queries.
 - Results are assembled in memory before being written to disk. Large repositories require sufficient memory, and upstream evaluation limits cause an error.
 - Place output outside the target repository to prevent a later indexing run from treating exported files as input. Upstream indexes remain in the local cache.
