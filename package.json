@@ -1,10 +1,10 @@
 {
   "name": "@youichi/repograph",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Export repository code graphs with codebase-memory-mcp.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hi-youichi/repograph.git"
+    "url": "git+https://github.com/hi-youichi/repograph.git"
   },
   "type": "module",
   "bin": {
