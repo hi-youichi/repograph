@@ -90,7 +90,7 @@ Node IDs and edge IDs are strings in separate namespaces. An edge's `source` and
 
 TypeScript and JavaScript `Function` and `Method` nodes include `callable` metadata in both `all` and `calls` exports. The exporter parses upstream `properties.signature` and `properties.return_type` with the TypeScript parser, without loading the target project's dependencies or inferring types. Supported file extensions are `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs`, and `.cjs`. Other languages and node labels omit `callable`. The original `properties` remain intact, and this additive field retains `schemaVersion: 1`.
 
-In `all` exports, TypeScript and JavaScript `Class` and `Interface` nodes include a `members` array for declared fields and accessors. Entries retain declared type text (or `null` when absent), source lines, visibility, static, optional, and readonly flags. The exporter also adds `DEPENDS_ON` edges for resolvable field, method-parameter, and method-return type references, plus method calls between classes. These source-derived edges have `properties.derivedFrom: "typescript-ast"` and a `reason`; they are omitted when a referenced class cannot be resolved without ambiguity. `calls` exports intentionally omit these class members and dependencies. Other languages retain whatever class, field, inheritance, implementation, and dependency nodes and edges the upstream indexer supplies.
+In `all` exports, class-like nodes include a normalized `members` array whenever the upstream indexer emits `Field` or `Property` nodes. Each member also remains a graph node and receives a `HAS_PROPERTY` edge from its owning class. Entries include declared type text when available, source lines, visibility, static, optional, and readonly flags. The exporter derives `DEPENDS_ON` edges from upstream field and method type metadata when the target class resolves unambiguously. TypeScript and JavaScript receive an AST fallback for declared fields, accessors, and type references when upstream field nodes are absent. Derived edges identify their source in `properties.derivedFrom` (`upstream-index` or `typescript-ast`) and include a `reason`. `calls` exports intentionally omit class members and these dependencies. Available fields and relationships still depend on what the upstream indexer extracts for each language.
 
 For example, `Customer` with an `address?: Address` field and a `save(input: Address): Result` method includes:
 
@@ -115,7 +115,7 @@ For example, `Customer` with an `address?: Address` field and a `save(input: Add
 }
 ```
 
-The graph also contains edges such as `{ "source": "<Customer id>", "target": "<Address id>", "type": "DEPENDS_ON", "properties": { "derivedFrom": "typescript-ast", "reason": "field-type", "member": "address" } }`. Existing upstream `INHERITS` and `IMPLEMENTS` edges are retained as-is.
+The graph also contains a `HAS_PROPERTY` edge from `Customer` to its `address` field node and an edge such as `{ "source": "<Customer id>", "target": "<Address id>", "type": "DEPENDS_ON", "properties": { "derivedFrom": "upstream-index", "reason": "field-type", "member": "address" } }`. Existing upstream `INHERITS` and `IMPLEMENTS` edges are retained as-is.
 
 For example, `function load(id: string, count = 1, ...tags: string[]): Promise<string[]>` produces:
 
@@ -176,7 +176,7 @@ Releases are published from GitHub Actions when a version tag is pushed. Before 
 - Exports contain the static relationships actually indexed upstream and do not guarantee coverage of all runtime calls. Support for reflection, dynamic dispatch, and framework conventions varies by language.
 - The upstream indexer skips `node_modules`, files matching ignore rules, and other excluded inputs. Use the skip and parse counts in `indexReport` to assess coverage.
 - `calls` mode retains only `CALLS` edges. It does not treat `CALL_REFERENCE` or `USAGE` as direct calls. The upstream analyzer may also record recursion in properties while omitting self-call edges.
-- Source-derived class members and type dependencies currently cover TypeScript and JavaScript files. Other languages depend on the class, field, and relationship data available from the pinned upstream indexer; type references are not inferred from unannotated initializers.
+- The exporter normalizes upstream class fields and type metadata without language-specific adapters. The pinned indexer does not emit every field or type relationship for every language, so missing upstream information cannot be reconstructed generically. Type references are not inferred from unannotated initializers.
 - Keep source files and the project's index unchanged during export, and prevent other processes from rebuilding the index concurrently. Exports are not transactional snapshots across queries.
 - Results are assembled in memory before being written to disk. Large repositories require sufficient memory, and upstream evaluation limits cause an error.
 - Place output outside the target repository to prevent a later indexing run from treating exported files as input. Upstream indexes remain in the local cache.
