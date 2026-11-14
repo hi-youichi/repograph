@@ -166,11 +166,14 @@ bun run typecheck
 bun test
 bun run test:integration
 bun run test:languages
+npm run test:package
 ```
 
 单元测试覆盖分页、游标、截断处理、文件行数、结构化的可调用对象元数据，以及异步类成员提取完成后才返回的行为。集成测试使用真实原生后端，覆盖原有多文件 TypeScript 项目和固定依赖中的全部 162 种语法样例，校验 CLI JSON 输出、API 的 `calls` 图、定义保留、文件行数、图完整性、解析诊断、孤立函数和类元数据。66 组调用样例均要求在两种导出模式中生成 `CALLS` 边。测试结束后清理临时仓库和索引。
 
 覆盖边界、样例来源和可选 JSON 报告见[全语言测试说明](test/fixtures/languages/README.md)。内置语法不一定能通过上游 CLI 作为独立源码文件被识别。
+
+GitHub Actions 在 Ubuntu、macOS、Windows 上分别使用 Node.js 22 和 24 验证。每组均执行类型检查、单元测试、全语言集成测试及 `npm run test:package`。安装包测试将构建后的 tarball 安装到仓库外的临时消费项目，通过 npm 调用安装后的 CLI，并检查 `all`、`calls` 导出、TypeScript/Python 调用关系和类元数据。逐平台语言报告保存为工作流产物。版本标签发布复用同一矩阵，只有全部 6 组成功后才允许发布 npm。
 
 ## 发布
 

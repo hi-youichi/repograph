@@ -1,0 +1,2 @@
+# Keep parser fixtures identical on Windows and Unix runners.
+test/fixtures/** text eol=lf

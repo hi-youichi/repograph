@@ -166,11 +166,14 @@ bun run typecheck
 bun test
 bun run test:integration
 bun run test:languages
+npm run test:package
 ```
 
 Unit tests cover pagination, cursors, truncation handling, file line counts, structured callable metadata, and completion of asynchronous class enrichment. Integration tests use the real native backend for the original multi-file TypeScript project and a corpus covering all 162 vendored grammars in the pinned backend. The language suite exercises the CLI's JSON output and the API's `calls` projection, definition preservation, file line counts, graph integrity, parse diagnostics, isolated functions, and class metadata. All 66 caller/callee samples require a resolved `CALLS` edge in both export modes. Temporary repositories and indexes are removed after each suite.
 
 See [the language corpus](test/fixtures/languages/README.md) for coverage boundaries, fixture provenance, and the optional JSON coverage report. The presence of a vendored grammar does not guarantee that the upstream CLI can discover it as a standalone source file.
+
+GitHub Actions validates Ubuntu, macOS, and Windows with Node.js 22 and 24. Every matrix job runs typechecking, unit tests, all language integration tests, and `npm run test:package`. The package check installs the built tarball into a temporary consumer project outside this checkout, invokes the installed CLI through npm, and verifies `all` and `calls` exports with TypeScript/Python calls and class metadata. Per-platform language reports are saved as workflow artifacts. Version-tag releases reuse this matrix and publish to npm only after all six jobs succeed.
 
 ## Publishing
 
