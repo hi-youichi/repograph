@@ -1,0 +1,3 @@
+ROUTINE sample
+Hello()
+    Quit 42

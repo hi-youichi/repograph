@@ -1,0 +1,5 @@
+(defun helper (x)
+  (* x 2))
+
+(defun run ()
+  (helper 21))

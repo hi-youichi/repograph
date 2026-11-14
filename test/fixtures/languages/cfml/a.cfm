@@ -1,0 +1,1 @@
+<cffunction name="foo"></cffunction>

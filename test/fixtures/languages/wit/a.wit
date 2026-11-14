@@ -1,0 +1,5 @@
+interface i {
+  record r { x: u32 }
+  enum e { a, b }
+  f: func() -> u32;
+}

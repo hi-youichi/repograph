@@ -196,7 +196,7 @@ export async function exportGraph(
   addCallables(selectedNodes);
   if (kind === "all") {
     options.onProgress?.("Extracting class members and type dependencies");
-    addClassMetadata(repositoryPath, nodes, edges);
+    await addClassMetadata(repositoryPath, nodes, edges);
   }
   return {
     schemaVersion: 1, generatedAt: new Date().toISOString(), repositoryPath,

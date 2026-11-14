@@ -1,5 +1,7 @@
 # repograph
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 Export repository indexes as JSON graphs for other programs using the [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) CLI. No language model, API key, or MCP client is required.
 
 ## Installation
@@ -163,9 +165,12 @@ for (const node of graph.nodes) {
 bun run typecheck
 bun test
 bun run test:integration
+bun run test:languages
 ```
 
-Unit tests cover pagination, cursors, truncation handling, file line counts, and structured callable metadata. The integration test uses the real native backend to index a temporary TypeScript project, checks cross-file calls, isolated functions, parameter and return annotations, methods, and export counts, and cleans up its temporary index.
+Unit tests cover pagination, cursors, truncation handling, file line counts, structured callable metadata, and completion of asynchronous class enrichment. Integration tests use the real native backend for the original multi-file TypeScript project and a corpus covering all 162 vendored grammars in the pinned backend. The language suite exercises the CLI's JSON output and the API's `calls` projection, definition preservation, file line counts, graph integrity, parse diagnostics, isolated functions, and class metadata. All 66 caller/callee samples require a resolved `CALLS` edge in both export modes. Temporary repositories and indexes are removed after each suite.
+
+See [the language corpus](test/fixtures/languages/README.md) for coverage boundaries, fixture provenance, and the optional JSON coverage report. The presence of a vendored grammar does not guarantee that the upstream CLI can discover it as a standalone source file.
 
 ## Publishing
 

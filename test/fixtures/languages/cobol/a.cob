@@ -1,0 +1,5 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. FOO.
+       PROCEDURE DIVISION.
+           MAIN-PARA.
+               STOP RUN.

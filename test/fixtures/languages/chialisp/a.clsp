@@ -1,0 +1,7 @@
+(mod (ARG)
+  (include condition_codes.clib)
+  (defconstant TWO 2)
+  (defun-inline square (x) (* x x))
+  (defmacro twice (v) (qq (+ (unquote v) (unquote v))))
+  (square ARG)
+)

@@ -1,0 +1,3 @@
+service Foo {
+  void ping()
+}

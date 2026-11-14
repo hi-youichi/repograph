@@ -1,6 +1,6 @@
 {
   "name": "@youichi/repograph",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Export repository code graphs with codebase-memory-mcp.",
   "repository": {
     "type": "git",
@@ -15,7 +15,8 @@
     "start": "bun run src/cli.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "test:integration": "REPOGRAPH_INTEGRATION=1 bun test test/integration.test.ts",
+    "test:integration": "REPOGRAPH_INTEGRATION=1 bun test test/integration.test.ts test/languages.integration.test.ts",
+    "test:languages": "REPOGRAPH_INTEGRATION=1 bun test test/languages.integration.test.ts",
     "build": "bun build ./src/cli.ts ./src/index.ts ./src/cbm.ts ./src/callables.ts ./src/classes.ts --target node --outdir dist --external \"*\"",
     "prepack": "bun run build"
   },

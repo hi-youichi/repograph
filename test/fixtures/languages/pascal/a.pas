@@ -1,0 +1,3 @@
+procedure Foo;
+begin
+end;
